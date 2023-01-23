@@ -23,10 +23,6 @@ from run_unittests import import_class_from_path
 from desired_outputs import desired_outputs
 from fixed_paths import PUBLIC_REPO_DIR
 
-import ray
-from ray import tune
-from ray.rllib.algorithms.ppo import PPO
-
 sys.path.append(PUBLIC_REPO_DIR)
 
 # Set logger level e.g., DEBUG, INFO, WARNING, ERROR.
@@ -38,8 +34,6 @@ def perform_other_imports():
     RLlib-related imports.
     """
     import ray
-    from ray import air, tune # SY add
-    from ray.rllib.algorithms.ppo import PPO # SY add
     import torch
     from gym.spaces import Box, Dict
     from ray.rllib.agents.a3c import A2CTrainer
@@ -50,7 +44,6 @@ def perform_other_imports():
 
 
 try:
-    print("other imports performing")
     other_imports = perform_other_imports()
 except ImportError:
     print("Installing requirements...")
@@ -70,43 +63,6 @@ from torch_models import TorchLinear
 
 _BIG_NUMBER = 1e20
 
-
-def get_tuner(run_config):
-    config1 = run_config['saving']
-    config2 = run_config['trainer']
-    config3 = run_config['env']
-    config4 = run_config['policy']
-    
-    p1 = config1['metrics_log_freq']
-    p2 = config1['model_params_save_freq']
-    
-    p3 = config2['num_envs']
-    p4 = config2['rollout_fragment_length']
-    p5 = config2['train_batch_size']
-    p6 = config2['num_episodes']
-    p7 = config2['num_workers']
-    p8 = config2['num_gpus']
-    
-    p9 = config3['num_discrete_action_levels']
-    p10 = config3['negotiation_on']
-    
-    config5 = config4['regions']
-    
-    
-    tuner = tune.Tuner(
-    "PPO",
-    tune_config=tune.TuneConfig(
-      metric="episode_reward_mean",
-      mode="max",
-      #scheduler=pbt,
-      num_samples=1),
-      param_space={
-        'num_workers': 1,
-        'num_gpus':p8
-    }
-    )
-    
-    return tuner
 
 def recursive_obs_dict_to_spaces_dict(obs):
     """Recursively return the observation space dictionary
@@ -329,14 +285,13 @@ def create_trainer(exp_run_config=None, source_dir=None, results_dir=None, seed=
     """
     Create the RLlib trainer.
     """
-    logging.warning("creating trainer")
     assert exp_run_config is not None
     if results_dir is None:
         # Use the current time as the name for the results directory.
         results_dir = f"{time.time():10.0f}"
 
     # Directory to save model checkpoints and metrics
-    logging.warning("creating save config")
+
     save_config = exp_run_config["saving"]
     results_save_dir = os.path.join(
         save_config["basedir"],
@@ -344,28 +299,18 @@ def create_trainer(exp_run_config=None, source_dir=None, results_dir=None, seed=
         save_config["tag"],
         results_dir,
     )
-    run_config1= exp_run_config # input to tuner
-    logging.warning("ray init call")
-    #if not ray.is_initialized():
-    #    ray.init() # ignore_reinit_error=True)
-    context = ray.init() # do no init?
-    logging.warning("ray initiated")
+
+    ray.init(ignore_reinit_error=True)
+
     # Create the A2C trainer.
     exp_run_config["env"]["source_dir"] = source_dir
-    logging.warning("exp run config is:", exp_run_config)
-    # set config here?
-    #my_config = A3CConfig().training(lr=0.01, grad_clip=30.0)
-    
-    """rllib_trainer = A2CTrainer(
+    rllib_trainer = A2CTrainer(
         env=EnvWrapper,
         config=get_rllib_config(
             exp_run_config=exp_run_config, env_class=EnvWrapper, seed=seed
         ),
-    )"""
-    tuner1= get_tuner(run_config1)
-    
-    logging.warning("created a2c trainer")
-    return tuner1, results_save_dir # return rllib_trainer
+    )
+    return rllib_trainer, results_save_dir
 
 
 def fetch_episode_states(trainer_obj=None, episode_states=None):
@@ -506,8 +451,7 @@ def trainer(
 
     for iteration in range(num_iters):
         print(f"********** Iter : {iteration + 1:5d} / {num_iters:5d} **********")
-        #result = trainer.train() # replace with tuner
-        result = trainer.fit()
+        result = trainer.train()
         total_timesteps = result.get("timesteps_total")
         if (
             iteration % run_config["saving"]["model_params_save_freq"] == 0
@@ -551,9 +495,9 @@ if __name__ == "__main__":
         run_config = yaml.safe_load(fp)
 
     # Create trainer
-    print("run config is:", run_config) # print about run config
+    # --------------
     trainer, save_dir = create_trainer(run_config)
-    print(" created trainer")
+
     # Copy the source files into the results directory
     # ------------------------------------------------
     os.makedirs(save_dir)
@@ -580,14 +524,13 @@ if __name__ == "__main__":
     num_episodes = trainer_config["num_episodes"]
     train_batch_size = trainer_config["train_batch_size"]
     # Fetch the env object from the trainer
-    #env_obj = trainer.workers.local_worker().env.env # not sure what to replace with
-    episode_length = 20 #env_obj.episode_length
+    env_obj = trainer.workers.local_worker().env.env
+    episode_length = env_obj.episode_length
     num_iters = (num_episodes * episode_length) // train_batch_size
 
     for iteration in range(num_iters):
         print(f"********** Iter : {iteration + 1:5d} / {num_iters:5d} **********")
-        result = trainer.fit() # trainer.train()
-        logging.warning("trainer fitted")
+        result = trainer.train()
         total_timesteps = result.get("timesteps_total")
         if (
             iteration % run_config["saving"]["model_params_save_freq"] == 0

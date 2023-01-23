@@ -1,12 +1,7 @@
 #FROM toluclassics/transformers_notebook
 #FROM jupyter/tensorflow-notebook
-#FROM openjdk:8-jdk-alpine
-#RUN ["apt-get", "update"]
-#RUN ["apt-get", "-y", "install", "vim"]
-
 FROM python:3.7-slim
-RUN pip3 install tensorflow==2.6.2 tensorflow-io==0.27.0
-
+RUN pip3 install tensorflow==2.10.0 tensorflow-io==0.27.0
 
 FROM jupyter/base-notebook:python-3.7.6
 

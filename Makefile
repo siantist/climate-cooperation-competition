@@ -7,16 +7,18 @@ DOCKER_VARS = --user $(shell id -u):$(shell id -g) --group-add users -e GRANT_SU
 all: build run
 
 build:
-	docker build --platform linux/arm64/v8 -t $(IMAGE) -f Dockerfile_CPU .
+	docker build --platform linux/arm64/v8 -t $(IMAGE) -f Dockerfile_CPU2 .
 
 run:
 	docker run --platform linux/arm64/v8 -it --rm $(DOCKER_VARS) -p 8888:8888 -v "${PWD}":/home/jovyan/work $(IMAGE)
 
-trainn:
+train:
 	docker run --shm-size=2.31gb --platform linux/arm64/v8 -it --rm $(DOCKER_VARS) -v "${PWD}":/home/jovyan/work $(IMAGE) python scripts/train_with_rllib.py
 
 trainnn:
-	docker run --shm-size=2.31gb --platform linux/arm64/v8 -it --rm $(DOCKER_VARS) -v "${PWD}":/home/jovyan/work $(IMAGE) python scripts/train_with_rllib_test_out.py
+	docker run --shm-size=2.31gb --platform linux/arm64/v8 -it --rm $(DOCKER_VARS) -v "${PWD}":/home/jovyan/work $(IMAGE) python scripts/testout_tune.py
+	
+#train_with_rllib_test_out.py
 	
 evaluate: SUB=$(shell ls -r Submissions/*.zip | tr ' ' '\n' | head -1)
 evaluate:

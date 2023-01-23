@@ -27,6 +27,9 @@ import ray
 from ray import tune
 from ray.rllib.algorithms.ppo import PPO
 
+from ray.air.config import RunConfig, ScalingConfig
+#from ray.train.xgboost import XGBoostTrainer
+
 #from sklearn import datasets
 
 sys.path.append(PUBLIC_REPO_DIR)
@@ -83,6 +86,10 @@ def get_tuner():
       mode="max",
       #scheduler=pbt,
       num_samples=1),
+      resources_per_trial={
+        "cpu": 2,
+        "gpu": 0
+    },
       param_space={
         'num_workers': 1
     }
@@ -90,6 +97,23 @@ def get_tuner():
     
     return tuner
 
+def get_tuner2():
+    """
+    trainer = XGBoostTrainer(
+    label_column="target",
+    params={},
+    datasets={"train": get_dataset()})"""
+    trainer = A2CTrainer()
+
+    param_space = {
+    "scaling_config": ScalingConfig(
+        num_workers=tune.grid_search([2, 4]),
+        resources_per_worker={
+            "CPU": tune.grid_search([1, 2])
+        })}
+    tuner = Tuner(trainable=trainer, param_space=param_space,
+    run_config=RunConfig(name="my_tune_run"))
+    return tuner
 
 if __name__ == "__main__":
     print("Training with RLlib...")
@@ -106,7 +130,9 @@ if __name__ == "__main__":
     episode_length = 20 #env_obj.episode_length
     num_iters = 5
     
-    trainer = get_tuner()
+    #ray.init()
+    print("test out tune")
+    trainer = get_tuner2()
     
     for iteration in range(num_iters):
         print(f"********** Iter : {iteration + 1:5d} / {num_iters:5d} **********")

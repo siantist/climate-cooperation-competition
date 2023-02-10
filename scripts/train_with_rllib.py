@@ -71,7 +71,7 @@ from torch_models import TorchLinear
 _BIG_NUMBER = 1e20
 
 
-def get_tuner(run_config):
+def get_tuner(run_config, EnvWrapper):
     config1 = run_config['saving']
     config2 = run_config['trainer']
     config3 = run_config['env']
@@ -101,6 +101,7 @@ def get_tuner(run_config):
       #scheduler=pbt,
       num_samples=1),
       param_space={
+        'env': EnvWrapper,
         'num_workers': 1,
         'num_gpus':p8
     }
@@ -362,7 +363,7 @@ def create_trainer(exp_run_config=None, source_dir=None, results_dir=None, seed=
             exp_run_config=exp_run_config, env_class=EnvWrapper, seed=seed
         ),
     )"""
-    tuner1= get_tuner(run_config1)
+    tuner1= get_tuner(run_config1, EnvWrapper)
     
     logging.warning("created a2c trainer")
     return tuner1, results_save_dir # return rllib_trainer

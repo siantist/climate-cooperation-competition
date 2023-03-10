@@ -18,6 +18,8 @@ def sample_weights_action_mask(self, wts_dict, num_regions):
     mask = self.default_agent_action_mask.copy()
     if self.negotiation_on:
       # sample the action 
+      for j in range(self.len_actions):
+        action01 = np.random.choice([1,0], p =[wts_i[j], 1- wts_i[j]])
 
 # exploitation step with this
 def linsumassignment_step(self, actions=None):

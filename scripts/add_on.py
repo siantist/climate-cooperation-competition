@@ -1,3 +1,6 @@
+# function for each region to rank their importances <= take from actual facts?
+def region_rank_importances(self):
+
 def wt_from_rating(ratings):
   Ind=0
   Tot= sum(ratings)

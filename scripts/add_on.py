@@ -1,6 +1,9 @@
 # function for each region to rank their importances <= take from actual facts?
 def region_rank_importances(self):
   max_map, min_map, av_map = all_constants_calc(self)
+  all_constants = self.all_constants
+  for region_map in all_constants:
+    
   
   
 # calculate maximum, minimum, average of the self all Constants

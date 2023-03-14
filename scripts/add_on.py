@@ -1,5 +1,36 @@
 # function for each region to rank their importances <= take from actual facts?
 def region_rank_importances(self):
+  max_map, min_map, av_map = all_constants_calc(self)
+  
+  
+# calculate maximum, minimum, average of the self all Constants
+def all_constants_calc(self):
+    all_constants = self.all_constants
+    const_map = {}
+    feat_list = ['xA_0', 'xK_0', 'xL_0', 'xL_a', 'xa_1', 'xa_2', 'xa_3', 'xdelta_A', 'xg_A', 'xgamma', 'xl_g', 'xsigma_0']
+    for region_map in all_constants:
+        for feat_key in feat_list:
+            feat_val = region_map[feat_key]
+            ca = const_map.get(feat_key)
+            if ca == None:
+                const_map[feat_key] = [feat_val]
+            else:
+                current_array = const_map[feat_key]
+                current_array.append(feat_val)
+                const_map[feat_key] = current_array
+    max_map = {}
+    min_map = {}
+    av_map = {}
+    for feat_key in feat_list:
+        feat_val = feat_list[feat_key]
+        fmax = np.max(feat_val)
+        fmin = np.min(feat_val)
+        fav = np.mean(feat_val)
+        max_map[feat_key] = fmax
+        min_map[feat_key] = fmin
+        av_map[feat_key] = fav
+
+    return max_map, min_map, av_map 
 
 def wt_from_rating(ratings):
   Ind=0

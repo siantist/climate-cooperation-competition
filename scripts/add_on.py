@@ -2,7 +2,24 @@
 def region_rank_importances(self):
   max_map, min_map, av_map = all_constants_calc(self)
   all_constants = self.all_constants
-  for region_map in all_constants:
+  feat_list = ['xA_0', 'xK_0', 'xL_0', 'xL_a', 'xa_1', 'xa_2', 'xa_3', 'xdelta_A', 'xg_A', 'xgamma', 'xl_g', 'xsigma_0']
+  region_ranked_scores ={}
+  for region_key in all_constants:
+      region_map = all_constants[region_key]
+      # convert to a score (between 0 and 1)?
+      ranked_scores= {}
+      for feat_key in feat_list:
+          feat_val = region_map[feat_key]
+          av_val = av_map[feat_key]
+          max_val = max_map[feat_key]
+          min_val = min_map[feat_key]
+          # calculate based on max and min and average ?
+          scaled_score = np.abs((feat_val - av_val)/(max_val - min_val))
+          ranked_scores[feat_key] = scaled_score
+
+      region_ranked_scores[region_key] = ranked_scores
+
+  return region_ranked_scores
     
   
   

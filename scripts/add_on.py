@@ -14,7 +14,7 @@ def region_rank_importances(self):
           max_val = max_map[feat_key]
           min_val = min_map[feat_key]
           # calculate based on max and min and average ?
-          scaled_score = np.abs((feat_val - av_val)/(max_val - min_val))
+          scaled_score = np.abs((feat_val - min_val)/(max_val - min_val))
           ranked_scores[feat_key] = scaled_score
 
       region_ranked_scores[region_key] = ranked_scores

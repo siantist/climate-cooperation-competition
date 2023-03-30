@@ -96,6 +96,82 @@ def reset():
             timestep=self.timestep,
             norm=1e2)
 
+        
+# relevant action and state dictionaries
+def phi4(self, actions):
+    
+    all_reg_action_dict = {}
+    all_reg_state_dict ={}
+    
+    for i in range(self.num_regions):
+        action_dict ={}
+        state_dict = {}
+        for rkey in self.relevant_states:
+            rval = self.global_state[rkey]
+            rlen = self.relevant_state_lens[rkey]
+            if rlen==1:
+                action_dict[rkey] = rval
+            if 1< rlen < self.num_regions:
+                action_dict[rkey] = np.mean(rval)
+            if rlen == self.num_regions:
+                action_dict[rkey] = rval[i]
+        
+        all_reg_action_dict[i] = action_dict
+        
+        for akey in self.relevant_actions:
+            aindex = self.indices_actions[akey]
+            alen = self.relevant_action_lens[akey]
+            aval = actions[aindex]
+            if alen==1:
+                state_dict[akey] = aval
+            if 1 < alen < self.num_regions:
+                state_dict[akey] = np.mean(aval)
+            if alen == self.num_regions:
+                state_dict[akey] = aval[i]
+        
+        all_reg_state_dict[i] = state_dict
+    
+    return all_reg_action_dict, all_reg_state_dict
+
+def run_kernel(self, g1, g2):
+    from grakel.kernels import PropagationAttr
+    pak = PropagationAttr(normalize=True)
+    pak.fit_transform([g1])
+    sc = pak.transform([g2])
+    
+    return sc
+
+# actions are nodes, node attributes are action values
+def prepare_grakel_input2(self, actions, all_reg_action_dict):
+    from grakel import Graph
+    
+    for i in range(self.num_regions):
+        actions_i = actions[i]
+        
+        node_attributes = {}
+        edges = {}
+        
+        act_ind= 0
+        # for each action, set a
+        for akey in self.relevant_actions:
+            
+            aindex = self.indices_actions[akey]
+            alen = self.relevant_action_lens[akey]
+            
+            # add to the node attributes
+            ac1 = actions_i[aind1]
+            node_attributes[act_ind] = ac1
+            act_ind = act_ind+1
+        
+        rel_action_len = len(self.relevant_actions)
+        for i in range(rel_action_len):
+            ilist = np.arange(rel_action_len)
+            ilist.remove(i)
+            edges[i] = ilist
+        ggraph = Graph(edges, node_labels= node_attributes)
+        grakel_graphs.append(ggraph)
+    return grakel_graphs
+
 # add to step
 def step():
 

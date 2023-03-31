@@ -545,6 +545,7 @@ class Rice:
                     for j in range(self.num_regions):
 
                         if i == j:
+                            self.kernels[(i,j)] = 1
                             continue
                         # calc kernel score
 
@@ -553,7 +554,7 @@ class Rice:
                         g1 = grakel_graphs[i]
                         g2 = grakel_graphs[j]
                         ks = self.run_kernel(g1, g2)
-                        self.kernel_scores[i,j] = ks
+                        self.kernel_scores[(i,j)] = ks
 
                 return self.proposal_step(actions)
 
@@ -692,16 +693,11 @@ class Rice:
 
     def reward_punishment(self):
         # calculate the change in feature from previous timestep
-        prev_state = self.global_state[key]["value"][self.timestep - 1].copy()
-        curr_state = self.global_state[key]["value"][self.timestep].copy()
+        prev_state = self.global_state['mitigation_rate_all_regions']["value"][self.timestep - 1].copy()
+        curr_state = self.global_state['mitigation_rate_all_regions']["value"][self.timestep].copy()
 
-        diffs = {}
-
-        pval = prev_state['mitigation_rate_all_regions']
-        cval = curr_state['mitigation_rate_all_regions']
-
-        pval1 = prev_state['current_balance_all_regions']
-        cval1 = curr_state['current_balance_all_regions']
+        pval1 = self.global_state['current_balance_all_regions']["value"][self.timestep - 1].copy()
+        cval1 = self.global_state['current_balance_all_regions']["value"][self.timestep].copy()
         # add reward or punishment based on whether countries pay attention
         thres = 0.6
         for i in range(self.num_regions):
@@ -711,9 +707,9 @@ class Rice:
                   # reward and punishment
 
                   # just look at mitigation rate?
-                    mitigation_diff = diffs['mitigation_rate_all_regions']
-                    difference_i = cval1[i] - pval1[i]#diffs[i]
-                    difference_j = cval1[j] - pval1[j] #diffs[j]
+                    #mitigation_diff = diffs['mitigation_rate_all_regions']
+                    difference_i = curr_state[i] - prev_state[i]#diffs[i]
+                    difference_j = curr_state[j] - prev_state[j] #diffs[j]
 
 
                   # add reward
@@ -731,8 +727,8 @@ class Rice:
         updated_array = cval1
         # set as global state
         self.set_global_state(
-                    key='current_balance_all_regions',
-                    value= updated_array, self.timestep)
+            "current_balance_all_regions", np.array(updated_array), self.timestep
+        )
 
     def generate_action_mask(self):
         """

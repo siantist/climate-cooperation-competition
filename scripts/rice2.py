@@ -290,12 +290,12 @@ class Rice:
             
             all_reg_action_dict[i] = action_dict
             #all_reg_state_dict[i] = state_dict
-        import pickle
-        pickle_out1 = open('all_reg_action_dict_pickle.pickle', 'wb')
+        #import pickle
+        #pickle_out1 = open('all_reg_action_dict_pickle.pickle', 'wb')
         #pickle_out2 = open('all_reg_state_dict_pickle.pickle', 'wb')
         
-        pickle.dump(all_reg_action_dict, pickle_out1)
-        pickle_out1.close()
+        #pickle.dump(all_reg_action_dict, pickle_out1)
+        #pickle_out1.close()
         
         #pickle.dump(all_reg_state_dict, pickle_out2)
         #pickle_out2.close()

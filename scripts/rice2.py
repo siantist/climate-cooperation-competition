@@ -545,7 +545,7 @@ class Rice:
                     for j in range(self.num_regions):
 
                         if i == j:
-                            self.kernels[(i,j)] = 1
+                            self.kernel_scores[(i,j)] = 1
                             continue
                         # calc kernel score
 

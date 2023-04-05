@@ -343,6 +343,8 @@ class Rice:
         sc = pak.transform([g2])
 
         return sc
+    
+    
     def reset(self):
         """
         Reset the environment
@@ -840,6 +842,24 @@ class Rice:
         # Force set the evaluation for own proposal to reject
         for region_id in range(self.num_regions):
             proposal_decisions[region_id, region_id] = 0
+            
+        # SY add
+        # calculate the percentiles
+        ac = self.kernel_scores # attention coefficients
+        p25 = np.percentile(ac, 25)
+        mean_coeff = np.mean(ac)
+        for i in range(self.num_regions):
+            # set the len 27 vector
+            vec27 = []
+            for j in range(self.num_regions):
+                coeff_ij = self.attention_coefficients[i,j]
+                # flip the zero to one if the attention coefficient is big enough
+                if coeff_ij > mean_coeff:
+                    proposal_decisions[i, j] = 1
+
+                # flip to 0 if attention coefficent is small enough
+                if coeff_ij < p25:
+                    proposal_decisions[i, j] = 1
 
         self.set_global_state("proposal_decisions", proposal_decisions, self.timestep)
 

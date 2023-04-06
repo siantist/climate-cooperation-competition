@@ -321,7 +321,7 @@ class Rice:
                 aval = actions_i[aindex]
                 #print("aval is :", aval)
                 if alen==1:
-                    action_dict[akey] = aval
+                    action_array.append(aval)
                 if 1 < alen < self.num_regions:
                     print("btwn 1 and num regions")
                     aval = actions_i[aindex:aindex+alen]#[np.mean(aval)]*self.num_regions
@@ -332,7 +332,7 @@ class Rice:
                     action_array.append(np.mean(aval))
                 if alen == 2*self.num_regions:
                     action_array.append(np.mean(actions_i[aindex:aindex+self.num_regions]))
-
+            #print("ind is now:", ind)
             all_reg_action_dict[i] = action_array
         return all_reg_action_dict
     
@@ -549,7 +549,7 @@ class Rice:
     def phi3(self, actions):
         # only consider actions
         relevant_action_dict = {}
-
+        import numpy as np
         ind = 0
         for akey in self.relevant_actions:
             # get the index
@@ -567,7 +567,8 @@ class Rice:
                     aval = np.mean(avals)
                     action_array.append(aval)
             relevant_action_dict[akey]= action_array
-
+        
+        import pandas as pd
         # compute correlations
         df2 = pd.DataFrame(relevant_action_dict)
         corr_matrix2 = df2.corr()
@@ -608,7 +609,8 @@ class Rice:
                 all_reg_action_dict, all_reg_state_dict = self.phi4(actions)
                 grakel_graphs = self.prepare_grakel_input(actions, all_reg_action_dict)
                 W= self.phi3(actions)
-                h = self.phi5(actions)
+                h_dict = self.phi5(actions)
+                e_array = np.zeros((self.num_regions, self.num_regions))
                 for i in range(self.num_regions):
                     for j in range(self.num_regions):
 
@@ -629,22 +631,27 @@ class Rice:
                         from keras import Sequential
                         from keras.layers import Dense
                         nlen = len(self.relevant_actions)
-                        a_model = Sequential()
-                        a_model.add(Dense(nlen, activation="softmax"))
                         
-                        hi = h[i]
-                        hj = h[j]
+                        hi = h_dict[i]
+                        hj = h_dict[j]
                         wh1 = np.matmul(W, hi)
                         wh2 = np.matmul(W, hj)
+
                         x = np.matmul(wh1, wh2)
-                        y = a_model(x).numpy()
-                        print("y is, ", y)
-                        self.kernel_scores[(i,j)] = ks + np.mean(y)
+                        #print("x is", x)
+                        #print(" x is nan is", np.isnan(x))
+                        eij = x 
+                        if np.isnan(x):
+                          eij = 0
+                        e_array[i,j] = eij
+
+                        self.kernel_scores[(i,j)] = ks 
                         
                         # append to kernel score array 
-                        self.kernel_score_array.append(ks + np.mean(y))
-                        
-                
+                        self.kernel_score_array.append(ks)
+                 #softmax
+                e_softmax = scipy.special.softmax(e_array)        
+                print("e softmax is", e_softmax)
                 return self.proposal_step(actions)
 
             if self.stage == 2:

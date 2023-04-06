@@ -668,7 +668,7 @@ class Rice:
                         self.kernel_scores[(i,j)] = ks + np.mean(y)
                         
                         # append to kernel score array 
-                        self.kernel_score_array.append(ks)
+                        self.kernel_score_array.append(ks+ np.mean(y))
                         
                 
                 return self.proposal_step(actions)

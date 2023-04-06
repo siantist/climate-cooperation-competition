@@ -304,6 +304,38 @@ class Rice:
 
         
         return all_reg_action_dict, all_reg_state_dict
+    def phi5(self, actions):
+
+        all_reg_action_dict = {}
+
+        for i in range(self.num_regions):
+            actions_i = actions[i]
+            action_dict ={}
+
+            ind = 0
+            for akey in self.relevant_actions:
+                #print("self indices actions is:", self.indices_actions)
+                aindex = self.indices_actions[akey]
+                alen = self.relevant_action_lens[ind]
+                ind = ind+1
+                aval = actions_i[aindex]
+                #print("aval is :", aval)
+                if alen==1:
+                    action_dict[akey] = aval
+                if 1 < alen < self.num_regions:
+                    print("btwn 1 and num regions")
+                    aval = actions_i[aindex:aindex+alen]#[np.mean(aval)]*self.num_regions
+                    action_dict[akey] = np.mean(aval)
+                if alen == self.num_regions:
+                    aval = actions_i[aindex:aindex+self.num_regions]
+                    #print("aval is for len = num regions:", aval)
+                    #print("i is:", i)
+                    action_dict[akey] = np.mean(aval)
+                if alen == 2*self.num_regions:
+                    action_dict[akey] = np.mean(actions_i[aindex:aindex+self.num_regions])
+
+            all_reg_action_dict[i] = action_dict
+        return all_reg_action_dict
     def prepare_grakel_input(self, actions, all_reg_action_dict):
         from grakel import Graph
         grakel_graphs = []

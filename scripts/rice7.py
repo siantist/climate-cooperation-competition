@@ -311,7 +311,7 @@ class Rice:
         for i in range(self.num_regions):
             actions_i = actions[i]
             action_dict ={}
-
+            action_array = []
             ind = 0
             for akey in self.relevant_actions:
                 #print("self indices actions is:", self.indices_actions)
@@ -325,17 +325,17 @@ class Rice:
                 if 1 < alen < self.num_regions:
                     print("btwn 1 and num regions")
                     aval = actions_i[aindex:aindex+alen]#[np.mean(aval)]*self.num_regions
-                    action_dict[akey] = np.mean(aval)
+                    #action_dict[akey] = np.mean(aval)
+                    action_array.append(np.mean(aval))
                 if alen == self.num_regions:
                     aval = actions_i[aindex:aindex+self.num_regions]
-                    #print("aval is for len = num regions:", aval)
-                    #print("i is:", i)
-                    action_dict[akey] = np.mean(aval)
+                    action_array.append(np.mean(aval))
                 if alen == 2*self.num_regions:
-                    action_dict[akey] = np.mean(actions_i[aindex:aindex+self.num_regions])
+                    action_array.append(np.mean(actions_i[aindex:aindex+self.num_regions]))
 
-            all_reg_action_dict[i] = action_dict
+            all_reg_action_dict[i] = action_array
         return all_reg_action_dict
+    
     def prepare_grakel_input(self, actions, all_reg_action_dict):
         from grakel import Graph
         grakel_graphs = []
@@ -634,6 +634,7 @@ class Rice:
                 grakel_graphs = self.prepare_grakel_input(actions, all_reg_action_dict)
                 acorr_matrix1, acorr_matrix2, acorr_matrix3 = self.phi3(actions)
                 W= acorr_matrix2
+                h = self.phi5(actions)
                 for i in range(self.num_regions):
                     for j in range(self.num_regions):
 
@@ -653,16 +654,18 @@ class Rice:
                         import keras
                         from keras import Sequential
                         from keras.layers import Dense
+                        nlen = len(self.relevant_actions)
                         a_model = Sequential()
                         a_model.add(Dense(nlen, activation="softmax"))
-                        nlen = len(self.relevant_actions)
                         
+                        hi = h[i]
+                        hj = h[j]
                         wh1 = np.matmul(W, hi)
                         wh2 = np.matmul(W, hj)
                         x = np.matmul(wh1, wh2)
-                        y = a_model(x)
-                        
-                        self.kernel_scores[(i,j)] = ks
+                        y = a_model(x).numpy()
+                        print("y is, ", y)
+                        self.kernel_scores[(i,j)] = ks + np.mean(y)
                         
                         # append to kernel score array 
                         self.kernel_score_array.append(ks)

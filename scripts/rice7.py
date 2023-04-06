@@ -547,60 +547,35 @@ class Rice:
         return self.generate_observation()
         
     def phi3(self, actions):
-        # only consider the state with relevant state
-        relevant_state_dict = {}
+        # only consider actions
         relevant_action_dict = {}
 
-        both_dict = {}
-
-        for rkey in self.relevant_states:
-            # aggregate
-            rval = self.global_state[rkey]
-            rlen = self.relevant_state_lens[rkey]
-            if rlen==1:
-                relevant_state_dict[rkey] = rval
-                both_dict[rkey] = rval
-            if rlen > 1:
-                val = np.mean(rval)
-                relevant_state_dict[rkey] = val
-                both_dict[rkey] = val
-
-            #if rlen == self.num_regions:
-                #for i in range(rlen):
-                    #relevant_state_dict[]
-
-
+        ind = 0
         for akey in self.relevant_actions:
             # get the index
             aindex = self.indices_actions[akey]
-            alen = self.relevant_action_lens[akey]
-            if alen == 1:
-                aval = actions[aindex]
-                relevant_action_dict[akey] = aval
-                both_dict[akey] = aval
-            if alen > 1:
-                avals = actions[aindex:aindex+alen]
-                val = np.mean(avals)
-                relevant_action_dict[akey]= val
-                both_dict[akey] = val
-                #for i in range(alen):
-                    #avals = actions[aindex:aindex+alen]
+            alen = self.relevant_action_lens[ind]
+            ind = ind+1
+            action_array=[]
+            for i in range(self.num_regions):
+                actions_i = actions[i]
+                if alen == 1:
+                    aval = actions_i[aindex]
+                    action_array.append(aval)
+                if alen > 1:
+                    avals = actions_i[aindex:aindex+alen]
+                    aval = np.mean(avals)
+                    action_array.append(aval)
+            relevant_action_dict[akey]= action_array
 
         # compute correlations
-        df1 = pd.DataFrame(relevant_state_dict)
         df2 = pd.DataFrame(relevant_action_dict)
-        df3 = pd.DataFrame(both_dict)
-
-        corr_matrix1 = df1.corr()
         corr_matrix2 = df2.corr()
-        corr_matrix3 = df3.corr()
 
         import numpy as np
-        acorr_matrix1 = np.array(corr_matrix1)
         acorr_matrix2 = np.array(corr_matrix2)
-        acorr_matrix3 = np.array(corr_matrix3)
 
-        return acorr_matrix1, acorr_matrix2, acorr_matrix3
+        return acorr_matrix2
 
     def step(self, actions=None):
         """
@@ -632,8 +607,7 @@ class Rice:
                 # SY ADD 
                 all_reg_action_dict, all_reg_state_dict = self.phi4(actions)
                 grakel_graphs = self.prepare_grakel_input(actions, all_reg_action_dict)
-                acorr_matrix1, acorr_matrix2, acorr_matrix3 = self.phi3(actions)
-                W= acorr_matrix2
+                W= self.phi3(actions)
                 h = self.phi5(actions)
                 for i in range(self.num_regions):
                     for j in range(self.num_regions):
@@ -668,7 +642,7 @@ class Rice:
                         self.kernel_scores[(i,j)] = ks + np.mean(y)
                         
                         # append to kernel score array 
-                        self.kernel_score_array.append(ks+ np.mean(y))
+                        self.kernel_score_array.append(ks + np.mean(y))
                         
                 
                 return self.proposal_step(actions)

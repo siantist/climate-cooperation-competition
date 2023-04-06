@@ -184,6 +184,8 @@ class Rice:
         self.kernel_scores = {}
         self.kernel_score_array = []
 
+        self.attention_coefficients = []
+
         self.actions_nvec = (
             self.savings_action_nvec
             + self.mitigation_rate_action_nvec
@@ -650,8 +652,9 @@ class Rice:
                         # append to kernel score array 
                         self.kernel_score_array.append(ks)
                  #softmax
+                import scipy
                 e_softmax = scipy.special.softmax(e_array)        
-                print("e softmax is", e_softmax)
+                self.attention_coefficients = e_softmax
                 return self.proposal_step(actions)
 
             if self.stage == 2:
@@ -939,13 +942,8 @@ class Rice:
             
         # SY add
         # calculate the percentiles
-        ac = self.kernel_score_array # attention coefficients
-        #print("kernel score ij 3,4 is ", self.kernel_scores[(3,4)])
-        #print("kernel score 3,4 > 0 is ", self.kernel_scores[(3,4)] >0 )
-        #print("kernel score 3,4 < 1 is ", self.kernel_scores[(3,4)] < 1 )
-        #if self.kernel_scores[(3,4)] >0:
-        #  print("hi")
-        print("kernel score values is ", ac)
+        ac = np.add(self.kernel_score_array, self.attention_coefficients) # attention coefficients
+        #print("kernel score values is ", ac)
         p20 = np.percentile(ac, 20)
         mean_coeff = np.mean(ac)
         for i in range(self.num_regions):
